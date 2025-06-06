@@ -1,1 +1,1 @@
-worker: python migrate.py
+worker: . /etc/profile && python migrate.py
