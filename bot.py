@@ -29,7 +29,35 @@ async def process_join(call: types.CallbackQuery):
     amount = 500  # тестовая сумма
     payment = create_payment(amount, call.from_user.id)
     url = payment.confirmation.confirmation_url
+
+    # === Записываем участника в БД ===
+    import asyncpg
+    from config import DATABASE_URL
+
+    giveaway_id = 1  # пока вручную (первый розыгрыш), потом сделаем динамическим
+
+    conn = await asyncpg.connect(DATABASE_URL)
+
+    # проверим, есть ли уже такой участник
+    exists = await conn.fetchval(
+        "SELECT COUNT(*) FROM participants WHERE user_id = $1 AND giveaway_id = $2",
+        call.from_user.id, giveaway_id
+    )
+
+    if exists == 0:
+        await conn.execute(
+            "INSERT INTO participants (user_id, giveaway_id, paid) VALUES ($1, $2, $3)",
+            call.from_user.id, giveaway_id, False
+        )
+        await bot.send_message(chat_id=call.from_user.id, text="✅ Вы записаны на участие в розыгрыше!")
+    else:
+        await bot.send_message(chat_id=call.from_user.id, text="⚠️ Вы уже участвуете в этом розыгрыше.")
+
+    await conn.close()
+
+    # === Отправляем ссылку на оплату ===
     await bot.send_message(chat_id=call.from_user.id, text=f"Оплати участие: {url}")
+
     await call.answer()
 
 # Запускаем бота + фиктивный сервер
