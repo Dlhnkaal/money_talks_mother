@@ -1,1 +1,2 @@
-worker: . /etc/profile && python migrate.py
+worker: env | grep DATABASE_URL && python migrate.py
+
