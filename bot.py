@@ -31,6 +31,32 @@ async def process_join(call: types.CallbackQuery):
 
     await call.answer()
 
+# Запускаем бота в фоне
+async def start_bot():
+    asyncio.create_task(main())  # твоя функция main()
+
+    # Фиктивный веб-сервер для Render
+    async def handle(request):
+        return web.Response(text="Bot is running!")
+
+    app = web.Application()
+    app.router.add_get("/", handle)
+
+    port = int(os.environ.get("PORT", 10000))  # Render задаст PORT, иначе 10000
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+    print(f"✅ Web server started on port {port}")
+
+    while True:
+        await asyncio.sleep(3600)  # чтобы не завершался
+
+# Запуск
+if __name__ == "__main__":
+    asyncio.run(start_bot())
+
 # Запуск
 if __name__ == '__main__':
     asyncio.run(dp.start_polling(bot))
