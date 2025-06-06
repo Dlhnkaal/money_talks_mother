@@ -3,6 +3,8 @@ from aiogram.filters import Command
 import asyncio
 from config import BOT_TOKEN, CHANNEL_USERNAME
 from payment import create_payment
+from aiohttp import web
+import os
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -28,13 +30,13 @@ async def process_join(call: types.CallbackQuery):
     payment = create_payment(amount, call.from_user.id)
     url = payment.confirmation.confirmation_url
     await bot.send_message(chat_id=call.from_user.id, text=f"Оплати участие: {url}")
-
     await call.answer()
 
-# Запускаем бота в фоне
+# Запускаем бота + фиктивный сервер
 async def start_bot():
-    asyncio.create_task(main())  # твоя функция main()
-
+    # Запускаем бота в фоне
+    asyncio.create_task(dp.start_polling(bot))
+    
     # Фиктивный веб-сервер для Render
     async def handle(request):
         return web.Response(text="Bot is running!")
@@ -50,13 +52,10 @@ async def start_bot():
 
     print(f"✅ Web server started on port {port}")
 
+    # Чтобы не завершался
     while True:
-        await asyncio.sleep(3600)  # чтобы не завершался
+        await asyncio.sleep(3600)
 
 # Запуск
 if __name__ == "__main__":
     asyncio.run(start_bot())
-
-# Запуск
-if __name__ == '__main__':
-    asyncio.run(dp.start_polling(bot))
