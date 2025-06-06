@@ -1,27 +1,19 @@
-CREATE TABLE giveaways (
-    id SERIAL PRIMARY KEY,
-    description TEXT NOT NULL,
-    price INTEGER NOT NULL,
-    max_participants INTEGER,
-    end_datetime TIMESTAMP NULL,
-    status TEXT NOT NULL DEFAULT 'draft',
-    created_at TIMESTAMP DEFAULT now()
+-- Создаем таблицу розыгрышей
+CREATE TABLE IF NOT EXISTS giveaways (
+    giveaway_id SERIAL PRIMARY KEY,
+    message_id BIGINT,
+    participants_count INT DEFAULT 0
 );
 
-CREATE TABLE participants (
-    id SERIAL PRIMARY KEY,
-    giveaway_id INTEGER REFERENCES giveaways(id) ON DELETE CASCADE,
+-- Создаем таблицу участников
+CREATE TABLE IF NOT EXISTS participants (
     user_id BIGINT NOT NULL,
-    username TEXT,
-    is_paid BOOLEAN DEFAULT FALSE,
-    payment_id TEXT,
-    joined_at TIMESTAMP DEFAULT now()
-);
-
-CREATE TABLE winners (
-    id SERIAL PRIMARY KEY,
-    giveaway_id INTEGER REFERENCES giveaways(id) ON DELETE CASCADE,
-    winner_user_id BIGINT NOT NULL,
-    username TEXT,
-    won_at TIMESTAMP DEFAULT now()
+    giveaway_id INT NOT NULL,
+    paid BOOLEAN DEFAULT FALSE,
+    nickname TEXT,
+    PRIMARY KEY (user_id, giveaway_id),
+    CONSTRAINT fk_giveaway
+        FOREIGN KEY(giveaway_id) 
+        REFERENCES giveaways(giveaway_id)
+        ON DELETE CASCADE
 );
