@@ -1,25 +1,31 @@
-import asyncio
 import logging
+import os
+
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.webhook import configure_app
 from aiohttp import web
+
 from config import BOT_TOKEN  # Импорт токена из config.py
-import os
 
-
+# === Настройка логирования ===
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+# === Инициализация бота и диспетчера ===
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
+# === Машина состояний ===
 class Form(StatesGroup):
     waiting_for_nickname = State()
     confirming_participation = State()
 
+# === Обработчики команд и состояний ===
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -90,24 +96,29 @@ async def help_message(message: types.Message):
     )
     await message.answer(text)
 
-async def run_bot():
-    polling_task = asyncio.create_task(dp.start_polling(bot))
-
-    async def handle(request):
-        return web.Response(text="Bot is running!")
-
+# === Основная точка входа ===
+async def main():
+    # Установка webhook
     app = web.Application()
-    app.router.add_get("/", handle)
+    webhook_path = f"/{bot.token}"  # Путь, по которому будут приходить обновления
+    configure_app(app, dp, webhook_path)
 
-    port = int(os.getenv("PORT", "10000"))
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", port)
+
+    host = "0.0.0.0"
+    port = int(os.getenv("PORT", "8080"))  # Render использует PORT=10000 или другой динамический
+
+    site = web.TCPSite(runner, host, port)
+    logger.info(f"✅ Web server started on port {port}")
+
+    webhook_url = f"https://money_talks_mother.onrender.com{webhook_path}" 
+    await bot.set_webhook(webhook_url)
+
     await site.start()
+    await asyncio.Event().wait()  # Держим сервер активным
 
-    logging.info(f"✅ Web server started on port {port}")
-
-    await polling_task
 
 if __name__ == "__main__":
-    asyncio.run(run_bot())
+    import asyncio
+    asyncio.run(main())
