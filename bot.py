@@ -23,9 +23,17 @@ class Form(StatesGroup):
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("Участвовать в розыгрыше", "Статус участия", "Отказаться от участия", "Помощь")
+    kb.row(
+        types.KeyboardButton("Участвовать в розыгрыше"),
+        types.KeyboardButton("Статус участия")
+    )
+    kb.row(
+        types.KeyboardButton("Отказаться от участия"),
+        types.KeyboardButton("Помощь")
+    )
     await message.answer("Привет! Чем могу помочь?", reply_markup=kb)
     await state.update_data(giveaway_id=1)
+
 
 @dp.message(lambda m: m.text == "Участвовать в розыгрыше")
 async def participate_start(message: types.Message, state: FSMContext):
