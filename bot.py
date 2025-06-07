@@ -11,8 +11,6 @@ from aiohttp import web
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-if not BOT_TOKEN:
-    raise RuntimeError("BOT_TOKEN is not set in environment variables")
 
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
