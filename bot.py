@@ -1,6 +1,5 @@
 import logging
 import os
-
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message, Update
@@ -31,17 +30,25 @@ class MyWebhookRequestHandler(SimpleRequestHandler):
         await self.dispatcher.feed_update(bot=self.bot, update=telegram_update)
         return web.Response(text="OK")
 
+# === Тестовый эндпоинт для проверки работы сервера ===
+async def ping(request):
+    return web.Response(text="Pong!")
+
 # === Основная точка входа ===
 async def main():
+    # 1. Создаем веб-приложение
     app = web.Application()
 
-    # Регистрируем диспетчер
+    # 2. Регистрируем диспетчер
     setup_application(app, dp, bot=bot)
+
+    # 3. Добавляем тестовый маршрут
+    app.router.add_get("/ping", ping)  # Теперь app уже определён!
 
     webhook_path = f"/{bot.token}"
     logger.info(f"Webhook path: {webhook_path}")
 
-    # Регистрируем хендлер для приёма обновлений от Telegram
+    # 4. Регистрируем хендлер для приёма обновлений от Telegram
     MyWebhookRequestHandler(bot=bot, dispatcher=dp).register(app, path=webhook_path)
 
     runner = web.AppRunner(app)
@@ -60,12 +67,6 @@ async def main():
 
     await site.start()
     await asyncio.Event().wait()  # Держим сервер активным
-
-# === Тестовый эндпоинт для проверки работы сервера ===
-async def ping(request):
-    return web.Response(text="Pong!")
-
-app.router.add_get("/ping", ping)
 
 
 if __name__ == "__main__":
