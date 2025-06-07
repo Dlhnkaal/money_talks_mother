@@ -7,6 +7,17 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiohttp import web
 from config import BOT_TOKEN, PORT, RENDER_EXTERNAL_URL
 
+SECRET_TOKEN = BOT_TOKEN.split(':')[1]  # Вынеси в переменную
+
+async def setup_webhook():
+    webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
+    try:
+        await bot.delete_webhook()
+        await bot.set_webhook(webhook_url, secret_token=SECRET_TOKEN)  # добавь secret_token!!!
+        logger.info(f"Webhook установлен: {webhook_url}")
+    except Exception as e:
+        logger.error(f"Ошибка вебхука: {e}")
+
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
@@ -28,15 +39,6 @@ async def index(request):
 async def ping(request):
     return web.Response(text="pong")
 
-async def setup_webhook():
-    webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
-    try:
-        await bot.delete_webhook()
-        await bot.set_webhook(webhook_url)
-        logger.info(f"Webhook установлен: {webhook_url}")
-    except Exception as e:
-        logger.error(f"Ошибка вебхука: {e}")
-
 async def start_server():
     app = web.Application()
 
@@ -48,8 +50,7 @@ async def start_server():
     webhook_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
-        secret_token=BOT_TOKEN.split(':')[1]
-    )
+        secret_token=SECRET_TOKEN)
     webhook_handler.register(app, path="/webhook")
 
     # Запуск aiohttp сервера
