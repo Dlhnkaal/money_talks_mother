@@ -29,9 +29,29 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+# Меню кнопок
+main_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="📋 Помощь", callback_data="help")],
+    [InlineKeyboardButton(text="ℹ️ О боте", callback_data="about")]
+])
+
+# Хэндлер на /start с кнопками
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
-    await message.answer("🤖 Бот работает! Отправьте /help для списка команд")
+    await message.answer("Выберите действие:", reply_markup=main_menu)
+
+# Хэндлер для обработки нажатий на кнопки
+@dp.callback_query()
+async def process_callback(callback_query: types.CallbackQuery):
+    data = callback_query.data
+    if data == "help":
+        await callback_query.message.answer("Список команд:\n/start — запустить бота\n/help — список команд")
+    elif data == "about":
+        await callback_query.message.answer("Этот бот сделан на aiogram + Render 🚀")
+    
+    await callback_query.answer()  # чтобы убрать "часики" на кнопке
 
 @dp.message(Command("help"))
 async def help_cmd(message: types.Message):
