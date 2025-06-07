@@ -1,4 +1,3 @@
-import os
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types
@@ -7,10 +6,9 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiohttp import web
+from config import BOT_TOKEN  # Импорт токена из config.py
 
 logging.basicConfig(level=logging.INFO)
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
@@ -53,7 +51,6 @@ async def confirm_nickname(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
 
     if text == "подтвердить никнейм":
-        # Заглушка — здесь можно добавить сохранение в БД
         await message.answer(f"Отлично, {nickname}! Твой ник сохранён.")
         await state.clear()
 
@@ -70,7 +67,6 @@ async def confirm_nickname(message: types.Message, state: FSMContext):
 
 @dp.message(lambda m: m.text == "Статус участия")
 async def check_status(message: types.Message):
-    # Заглушка — здесь можно добавить проверку статуса из БД
     await message.answer("Пока у тебя нет статуса участия.")
 
 @dp.message(lambda m: m.text == "Помощь")
@@ -105,4 +101,3 @@ async def run_bot():
 
 if __name__ == "__main__":
     asyncio.run(run_bot())
-
