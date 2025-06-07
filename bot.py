@@ -7,6 +7,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiohttp import web
 from config import BOT_TOKEN  # Импорт токена из config.py
+import os
+
 
 logging.basicConfig(level=logging.INFO)
 
