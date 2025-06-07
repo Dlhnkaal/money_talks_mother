@@ -1,6 +1,6 @@
 import os
 
-BOT_TOKEN = '7792344421:AAFD2mGg58Z51bhkqSFw5TOyd25HDVBHLfc'
+BOT_TOKEN = '7792344421:AAEcvmznP_NKvHtH0-roiC3fmj7IduhyPag'
 
 CHANNEL_USERNAME = '@twelvemua'
 
