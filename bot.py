@@ -34,7 +34,6 @@ class MyWebhookRequestHandler(SimpleRequestHandler):
 async def ping(request):
     return web.Response(text="Pong!")
 
-# === Основная точка входа ===
 async def main():
     # 1. Создаем веб-приложение
     app = web.Application()
