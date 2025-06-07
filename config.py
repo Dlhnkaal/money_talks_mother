@@ -6,5 +6,7 @@ PORT = int(os.getenv("PORT", "10000"))
 
 PAY_URL = "https://example.com/pay"  # сюда потом вставишь свою ссылку
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 ADMIN_USERNAME = "peakmelisusha"  # ТВОЙ ЮЗЕРНЕЙМ
 CHANNEL_USERNAME = "twelvemua"
