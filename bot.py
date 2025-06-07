@@ -10,7 +10,8 @@ from config import BOT_TOKEN, PORT, RENDER_EXTERNAL_URL
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 
@@ -19,44 +20,59 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start_cmd(message: types.Message):
-    await message.answer("🚀 Бот успешно запущен!")
+    await message.answer("🤖 Бот работает! Отправьте /help для списка команд")
 
-async def health_check(request):
-    return web.Response(text="🏓 Pong")
+async def index(request):
+    return web.Response(text="Добро пожаловать в бота!")
 
-async def on_startup(bot: Bot):
+async def ping(request):
+    return web.Response(text="pong")
+
+async def setup_webhook():
     webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
-    await bot.set_webhook(webhook_url)
-    logger.info(f"✅ Вебхук установлен: {webhook_url}")
+    try:
+        await bot.delete_webhook()
+        await bot.set_webhook(webhook_url)
+        logger.info(f"Webhook установлен: {webhook_url}")
+        return True
+    except Exception as e:
+        logger.error(f"Ошибка вебхука: {e}")
+        return False
 
-async def start_webhook():
+async def start_server():
     app = web.Application()
-    app.router.add_get("/ping", health_check)
     
-    # Правильная регистрация обработчика вебхука
-    webhook_requests_handler = SimpleRequestHandler(
+    # Регистрация маршрутов
+    app.router.add_get("/", index)
+    app.router.add_get("/ping", ping)
+    
+    # Настройка вебхука Telegram
+    webhook_handler = SimpleRequestHandler(
         dispatcher=dp,
-        bot=bot
+        bot=bot,
+        secret_token=BOT_TOKEN.split(':')[1]  # Используем часть токена как секрет
     )
-    webhook_requests_handler.register(app, path="/webhook")
+    webhook_handler.register(app, path="/webhook")
     
+    # Запуск сервера
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
     await site.start()
 
-    logger.info(f"🤖 Сервер запущен на порту {PORT}")
-    await asyncio.Event().wait()
-
-async def start_polling():
-    await bot.delete_webhook()
-    await dp.start_polling(bot)
+    logger.info(f"Сервер запущен на порту {PORT}")
+    
+    if await setup_webhook():
+        logger.info("Бот запущен в режиме вебхука")
+    else:
+        logger.warning("Запускаю в режиме polling...")
+        await dp.start_polling(bot)
+    
+    await asyncio.Event().wait()  # Бесконечное ожидание
 
 if __name__ == "__main__":
     try:
-        # Пытаемся запустить вебхук, при ошибке переключаемся на polling
-        asyncio.run(start_webhook())
+        asyncio.run(start_server())
     except Exception as e:
-        logger.error(f"❌ Ошибка вебхука: {e}")
-        logger.info("🔄 Переключаемся на polling режим...")
-        asyncio.run(start_polling())
+        logger.critical(f"Фатальная ошибка: {e}")
+        exit(1)
