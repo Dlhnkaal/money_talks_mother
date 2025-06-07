@@ -61,6 +61,12 @@ async def main():
     await site.start()
     await asyncio.Event().wait()  # Держим сервер активным
 
+# === Тестовый эндпоинт для проверки работы сервера ===
+async def ping(request):
+    return web.Response(text="Pong!")
+
+app.router.add_get("/ping", ping)
+
 
 if __name__ == "__main__":
     import asyncio
