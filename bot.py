@@ -21,7 +21,7 @@ handlers.admin.register_handlers(dp)
 async def setup_webhook():
     webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
     await bot.delete_webhook()
-    await bot.set_webhook(webhook_url)
+    await bot.set_webhook(webhook_url, secret_token=BOT_TOKEN.split(':')[1])
     logger.info(f"Webhook установлен: {webhook_url}")
 
 async def start_server():
