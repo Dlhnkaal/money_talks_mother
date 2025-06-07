@@ -39,11 +39,11 @@ async def main():
     # 1. Создаем веб-приложение
     app = web.Application()
 
-    # 2. Регистрируем диспетчер
-    setup_application(app, dp, bot=bot)
+    # 2. Добавляем тестовый маршрут ДО setup_application
+    app.router.add_get("/ping", ping)
 
-    # 3. Добавляем тестовый маршрут
-    app.router.add_get("/ping", ping)  # Теперь app уже определён!
+    # 3. Регистрируем диспетчер
+    setup_application(app, dp, bot=bot)
 
     webhook_path = f"/{bot.token}"
     logger.info(f"Webhook path: {webhook_path}")
@@ -60,7 +60,7 @@ async def main():
     site = web.TCPSite(runner, host, port)
     logger.info(f"✅ Web server started on port {port}")
 
-    webhook_url = f"https://money_talks_mother.onrender.com{webhook_path}" 
+    webhook_url = f"https://money_talks_mother.onrender.com{webhook_path}"    
     logger.info(f"Setting webhook to {webhook_url}")
     await bot.set_webhook(webhook_url)
     logger.info("✅ Webhook set successfully")
