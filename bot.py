@@ -34,7 +34,7 @@ dp = Dispatcher()
 main_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📋 Помощь", callback_data="help")],
     [InlineKeyboardButton(text="ℹ️ О боте", callback_data="about")],
-    [InlineKeyboardButton(text="💳 Оплатить 99₽", callback_data="pay")]
+    [InlineKeyboardButton(text="💳 Оплатить 99₽", url="pay")]
 ])
 
 # Меню оплаты
