@@ -5,7 +5,8 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiohttp import web
-from config import BOT_TOKEN, PORT, RENDER_EXTERNAL_URL
+from config import BOT_TOKEN, PORT, RENDER_EXTERNAL_URL, PAY_URL
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 SECRET_TOKEN = BOT_TOKEN.split(':')[1]  # Вынеси в переменную
 
@@ -29,13 +30,18 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
-# Меню кнопок
+# Главное меню с кнопками
 main_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📋 Помощь", callback_data="help")],
-    [InlineKeyboardButton(text="ℹ️ О боте", callback_data="about")]
+    [InlineKeyboardButton(text="ℹ️ О боте", callback_data="about")],
+    [InlineKeyboardButton(text="💳 Оплатить 99₽", callback_data="pay")]
 ])
+
+# Меню оплаты
+pay_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Хочу поучаствовать", url=PAY_URL)]
+])
+
 
 # Хэндлер на /start с кнопками
 @dp.message(Command("start"))
@@ -50,8 +56,10 @@ async def process_callback(callback_query: types.CallbackQuery):
         await callback_query.message.answer("Список команд:\n/start — запустить бота\n/help — список команд")
     elif data == "about":
         await callback_query.message.answer("Этот бот сделан на aiogram + Render 🚀")
+    elif data == "pay":
+        await callback_query.message.answer("Чтобы принять участие в розыгрыше, нажми кнопку ниже:", reply_markup=pay_menu)
     
-    await callback_query.answer()  # чтобы убрать "часики" на кнопке
+    await callback_query.answer()
 
 @dp.message(Command("help"))
 async def help_cmd(message: types.Message):
