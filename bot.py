@@ -6,7 +6,8 @@ from aiogram.filters import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.webhook import configure_app
+from aiogram.types import Update
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 
 from config import BOT_TOKEN  # Импорт токена из config.py
@@ -96,23 +97,35 @@ async def help_message(message: types.Message):
     )
     await message.answer(text)
 
+# === Telegram Request Handler ===
+class MyWebhookRequestHandler(SimpleRequestHandler):
+    async def handle(self, request: web.Request):
+        update = await request.json()
+        telegram_update = Update(**update)
+        await self.dispatcher.feed_update(bot=self.bot, update=telegram_update)
+        return web.Response()
+
+
 # === Основная точка входа ===
 async def main():
-    # Установка webhook
     app = web.Application()
-    webhook_path = f"/{bot.token}"  # Путь, по которому будут приходить обновления
-    configure_app(app, dp, webhook_path)
+
+    # Настраиваем приложение
+    setup_application(app, dp, bot=bot)
+
+    webhook_path = f"/{bot.token}"
+    MyWebhookRequestHandler(bot=bot, dispatcher=dp).register(app, path=webhook_path)
 
     runner = web.AppRunner(app)
     await runner.setup()
 
     host = "0.0.0.0"
-    port = int(os.getenv("PORT", "8080"))  # Render использует PORT=10000 или другой динамический
+    port = int(os.getenv("PORT", "8080"))
 
     site = web.TCPSite(runner, host, port)
     logger.info(f"✅ Web server started on port {port}")
 
-    webhook_url = f"https://money_talks_mother.onrender.com{webhook_path}" 
+    webhook_url = f"https://money_talks_mother.onrender.com{webhook_path}"    
     await bot.set_webhook(webhook_url)
 
     await site.start()
