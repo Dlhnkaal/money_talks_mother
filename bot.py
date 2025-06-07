@@ -1,9 +1,9 @@
 import logging
 import os
 import asyncio
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiohttp import web
 from config import BOT_TOKEN, PORT, RENDER_EXTERNAL_URL
 
@@ -14,58 +14,49 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Проверка токена перед запуском
-def validate_token(token: str) -> bool:
-    if not token or token.count(':') != 1:
-        return False
-    bot_id, bot_key = token.split(':')
-    return bot_id.isdigit() and len(bot_key) >= 30
-
-if not validate_token(BOT_TOKEN):
-    logger.critical("❌ Invalid BOT_TOKEN format!")
-    exit(1)
-
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 @dp.message(Command("start"))
-async def start_cmd(message: Message):
-    await message.answer("Bot is working!")
+async def start_cmd(message: types.Message):
+    await message.answer("🚀 Бот успешно запущен!")
 
 async def health_check(request):
-    return web.Response(text="✅ Bot is healthy")
+    return web.Response(text="🏓 Pong")
 
-async def setup_webhook():
+async def on_startup(bot: Bot):
     webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
-    try:
-        await bot.delete_webhook()
-        await bot.set_webhook(webhook_url)
-        logger.info(f"Webhook set to: {webhook_url}")
-        return True
-    except Exception as e:
-        logger.error(f"Webhook setup failed: {e}")
-        return False
+    await bot.set_webhook(webhook_url)
+    logger.info(f"✅ Вебхук установлен: {webhook_url}")
 
-async def start_bot():
+async def start_webhook():
     app = web.Application()
-    app.router.add_get("/health", health_check)
-    app.router.add_post("/webhook", dp._setup_webhook_app(bot))
+    app.router.add_get("/ping", health_check)
+    
+    # Правильная регистрация обработчика вебхука
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot
+    )
+    webhook_requests_handler.register(app, path="/webhook")
     
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
     await site.start()
 
-    if not await setup_webhook():
-        logger.error("Falling back to polling...")
-        await dp.start_polling(bot)
-    else:
-        logger.info("Bot started in webhook mode")
-        await asyncio.Event().wait()
+    logger.info(f"🤖 Сервер запущен на порту {PORT}")
+    await asyncio.Event().wait()
+
+async def start_polling():
+    await bot.delete_webhook()
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     try:
-        asyncio.run(start_bot())
+        # Пытаемся запустить вебхук, при ошибке переключаемся на polling
+        asyncio.run(start_webhook())
     except Exception as e:
-        logger.critical(f"Bot crashed: {e}")
-        exit(1)
+        logger.error(f"❌ Ошибка вебхука: {e}")
+        logger.info("🔄 Переключаемся на polling режим...")
+        asyncio.run(start_polling())
