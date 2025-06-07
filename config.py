@@ -1,13 +1,10 @@
 import os
 
-# Важно: используйте os.getenv() для безопасности
-BOT_TOKEN = os.environ['BOT_TOKEN']  # Обязательно через переменные окружения
-CHANNEL_USERNAME = '@twelvemua'
-DATABASE_URL = os.getenv("DATABASE_URL")
-SHOP_ID = '1102570'
-SHOP_SECRET_KEY = 'test_pOQVVRWofLkmBQfDc5H_ALXUywMM8V30BQS_ed_2xKN'
-PAY_URL = ""
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+RENDER_EXTERNAL_URL = os.getenv('RENDER_EXTERNAL_URL')
+PORT = int(os.getenv("PORT", "10000"))
 
-# Настройки для Render
-RENDER_EXTERNAL_URL = os.environ['RENDER_EXTERNAL_URL']  # Автоматически задаётся Render
-PORT = int(os.environ.get("PORT", "10000"))
+PAY_URL = "https://example.com/pay"  # сюда потом вставишь свою ссылку
+
+ADMIN_USERNAME = "peakmelisusha"  # ТВОЙ ЮЗЕРНЕЙМ
+CHANNEL_USERNAME = "twelvemua"
