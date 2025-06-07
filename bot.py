@@ -34,41 +34,37 @@ async def setup_webhook():
         await bot.delete_webhook()
         await bot.set_webhook(webhook_url)
         logger.info(f"Webhook установлен: {webhook_url}")
-        return True
     except Exception as e:
         logger.error(f"Ошибка вебхука: {e}")
-        return False
 
 async def start_server():
     app = web.Application()
-    
+
     # Регистрация маршрутов
     app.router.add_get("/", index)
     app.router.add_get("/ping", ping)
-    
-    # Настройка вебхука Telegram
+
+    # Настройка webhook handler
     webhook_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
-        secret_token=BOT_TOKEN.split(':')[1]  # Используем часть токена как секрет
+        secret_token=BOT_TOKEN.split(':')[1]
     )
     webhook_handler.register(app, path="/webhook")
-    
-    # Запуск сервера
+
+    # Запуск aiohttp сервера
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
     await site.start()
 
     logger.info(f"Сервер запущен на порту {PORT}")
-    
-    if await setup_webhook():
-        logger.info("Бот запущен в режиме вебхука")
-    else:
-        logger.warning("Запускаю в режиме polling...")
-        await dp.start_polling(bot)
-    
-    await asyncio.Event().wait()  # Бесконечное ожидание
+
+    # Установка вебхука
+    await setup_webhook()
+
+    # Просто держим процесс "живым"
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
     try:
