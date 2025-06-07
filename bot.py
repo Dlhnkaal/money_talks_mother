@@ -29,14 +29,18 @@ logger = logging.getLogger(__name__)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-@dp.message(Command(commands=["start", "help", "about"]))
-async def common_cmd(message: types.Message, command: Command.CommandObject):
-    if command.command == "start":
-        await message.answer("🤖 Бот работает! Отправьте /help для списка команд")
-    elif command.command == "help":
-        await message.answer("Список команд:\n/start — запустить бота\n/help — список команд\n/about — о боте")
-    elif command.command == "about":
-        await message.answer("Этот бот сделан на aiogram + Render 🚀")
+@dp.message(Command("start"))
+async def start_cmd(message: types.Message):
+    await message.answer("🤖 Бот работает! Отправьте /help для списка команд")
+
+@dp.message(Command("help"))
+async def help_cmd(message: types.Message):
+    await message.answer("Список команд:\n/start — запустить бота\n/help — список команд")
+
+@dp.message(Command("about"))
+async def about_cmd(message: types.Message):
+    await message.answer("Этот бот сделан на aiogram + Render 🚀")
+
 
 async def index(request):
     return web.Response(text="Добро пожаловать в бота!")
